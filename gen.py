@@ -1,17 +1,7 @@
-'''
-Author: Ceoifung
-Date: 2025-02-26 15:20:30
-LastEditors: Ceoifung
-LastEditTime: 2025-02-26 15:20:35
-Description: XiaoRGEEK All Rights Reserved. Powered By Ceoifung
-'''
 import os
 
 # 获取当前文件夹路径
 current_folder = os.getcwd()
-
-# 获取当前文件夹中的所有文件和文件夹
-entries = os.listdir(current_folder)
 
 # 创建HTML内容
 html_content = """
@@ -20,7 +10,7 @@ html_content = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Index of Current Folder</title>
+    <title>rosjava_boostrap maven repo</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -43,21 +33,54 @@ html_content = """
         a:hover {
             text-decoration: underline;
         }
+        .folder {
+            font-weight: bold;
+        }
+        .files {
+            margin-left: 20px;
+        }
     </style>
 </head>
 <body>
-    <h1>Index of Current Folder</h1>
+    <h1>rosjava_bootstrap maven center</h1>
     <ul>
 """
 
-# 遍历文件夹中的内容并添加到HTML列表中
-for entry in entries:
-    if entry == "index.html":  # 跳过生成的index.html文件本身
-        continue
-    if os.path.isdir(os.path.join(current_folder, entry)):
-        html_content += f'        <li><a href="{entry}/">{entry}/</a></li>\n'
+def add_to_html(path, indent=0):
+    global html_content
+    # 获取路径的相对路径
+    rel_path = os.path.relpath(path, current_folder)
+    if os.path.isdir(path):
+        # 跳过隐藏目录（如 .git）
+        if os.path.basename(path).startswith('.'):
+            return
+        # 文件夹路径在同一行显示
+        html_content += f'{"  " * indent}<li class="folder">{rel_path}/</li>\n'
+        html_content += f'{"  " * indent}<ul>\n'
+        # 列出文件
+        files = [entry for entry in sorted(os.listdir(path)) if os.path.isfile(os.path.join(path, entry))]
+        if files:
+            html_content += f'{"  " * (indent + 1)}<ul class="files">\n'
+            for entry in files:
+                # 跳过 .html 和 .py 文件
+                if entry.endswith(('.html', '.py')):
+                    continue
+                html_content += f'{"  " * (indent + 2)}<li><a href="{rel_path}/{entry}">{entry}</a></li>\n'
+            html_content += f'{"  " * (indent + 1)}</ul>\n'
+        # 递归处理子文件夹
+        for entry in sorted(os.listdir(path)):
+            entry_path = os.path.join(path, entry)
+            if os.path.isdir(entry_path) and not entry.startswith('.'):
+                add_to_html(entry_path, indent + 1)
+        html_content += f'{"  " * indent}</ul>\n'
     else:
-        html_content += f'        <li><a href="{entry}">{entry}</a></li>\n'
+        # 跳过 .html 和 .py 文件
+        if path.endswith(('.html', '.py')):
+            return
+        html_content += f'{"  " * indent}<li class="files"><a href="{rel_path}">{os.path.basename(path)}</a></li>\n'
+
+# 从当前文件夹开始递归添加内容
+add_to_html(current_folder)
 
 html_content += """
     </ul>
